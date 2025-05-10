@@ -1,26 +1,29 @@
 import gradio as gr
 import os
 import uuid
-from inference import main as run_inference
+from inference import infer as run_inference  # Changed from main to infer
 from PIL import Image
 
 def generate_video(image, prompt, height, width, num_frames, seed):
     input_image_path = f"/tmp/input_{uuid.uuid4().hex}.png"
     image.save(input_image_path)
 
-    args = [
-        "--prompt", prompt,
-        "--height", str(height),
-        "--width", str(width),
-        "--num_frames", str(num_frames),
-        "--seed", str(seed),
-        "--pipeline_config", "configs/ltxv-13b-0.9.7-dev.yaml",
-        "--conditioning_media_paths", input_image_path,
-        "--conditioning_start_frames", "0",
-        "--conditioning_strengths", "1.0"
-    ]
-
-    run_inference(args)
+    run_inference(
+        output_path=None,
+        seed=seed,
+        pipeline_config="configs/ltxv-13b-0.9.7-dev.yaml",
+        image_cond_noise_scale=0.15,
+        height=height,
+        width=width,
+        num_frames=num_frames,
+        frame_rate=30,
+        prompt=prompt,
+        negative_prompt="worst quality, inconsistent motion, blurry, jittery, distorted",
+        offload_to_cpu=False,
+        conditioning_media_paths=[input_image_path],
+        conditioning_strengths=[1.0],
+        conditioning_start_frames=[0],
+    )
 
     output_dir = "outputs"
     today_folder = sorted(os.listdir(output_dir))[-1]
